@@ -1,0 +1,380 @@
+{% extends 'complaints/base.html' %}
+
+{% block title %}Warden Dashboard - HostelCare{% endblock %}
+
+{% block content %}
+<div class="container">
+    <!-- Warden Profile summary & Header -->
+    <div class="page-header d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3">
+        <div>
+            <h2 class="text-white mb-1">Warden Dashboard</h2>
+            <p class="text-secondary small mb-0">
+                Welcome back, Warden <strong>{{ user.username }}</strong> &nbsp;|&nbsp; 
+                Managing authority for your assigned hostel blocks.
+            </p>
+        </div>
+        <div class="d-flex gap-2">
+            <button class="btn btn-outline-custom rounded-pill px-3" type="button" data-bs-toggle="collapse" data-bs-target="#analyticsCollapse" aria-expanded="false" aria-controls="analyticsCollapse">
+                <i class="fa-solid fa-chart-line me-2"></i>Toggle Analytics
+            </button>
+        </div>
+    </div>
+
+    <!-- Hostel & Access Key Management Banner/Card -->
+    <div class="glass-card p-3 mb-4">
+        <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3">
+            <div>
+                <h5 class="text-white mb-1">
+                    <i class="fa-solid fa-key me-2 text-teal"></i>Hostel & Registration Key Management
+                </h5>
+                <p class="text-secondary small mb-0">
+                    Students register using your unique Hostel Key to automatically join your managed hostel.
+                </p>
+            </div>
+            <div>
+                <button class="btn btn-teal-gradient rounded-pill px-3 py-1 btn-sm" type="button" data-bs-toggle="modal" data-bs-target="#createHostelModal">
+                    <i class="fa-solid fa-plus me-1"></i>Create New Hostel
+                </button>
+            </div>
+        </div>
+        
+        {% if warden_hostels %}
+            <div class="row g-3 mt-2">
+                {% for hostel in warden_hostels %}
+                <div class="col-md-6 col-lg-4">
+                    <div class="p-3 rounded-3 bg-dark bg-opacity-50 border border-secondary border-opacity-25 d-flex justify-content-between align-items-center">
+                        <div>
+                            <div class="fw-semibold text-white mb-1"><i class="fa-solid fa-building me-2 text-indigo"></i>{{ hostel.name }}</div>
+                            <small class="text-secondary">Hostel Key: <code class="fs-6 text-teal font-monospace fw-bold">{{ hostel.code }}</code></small>
+                        </div>
+                        <span class="badge bg-indigo rounded-pill">Active</span>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <div class="alert alert-warning border-0 small mt-3 mb-0">
+                <i class="fa-solid fa-triangle-exclamation me-2"></i>
+                You haven't created a hostel yet. Click <strong>Create New Hostel</strong> above to generate a unique Hostel Key for your students.
+            </div>
+        {% endif %}
+    </div>
+
+    <!-- Create Hostel Modal -->
+    <div class="modal fade" id="createHostelModal" tabindex="-1" aria-labelledby="createHostelModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content glass-card border-secondary text-white">
+                <div class="modal-header border-bottom border-secondary border-opacity-25">
+                    <h5 class="modal-title fw-bold" id="createHostelModalLabel"><i class="fa-solid fa-hotel text-teal me-2"></i>Register New Hostel</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <form method="POST">
+                    {% csrf_token %}
+                    <input type="hidden" name="action_type" value="create_hostel">
+                    <div class="modal-body">
+                        <p class="text-secondary small mb-3">
+                            Enter the name of your hostel (e.g. <em>ABC Boys Hostel</em>). A secure, unique 8-character Hostel Key will be generated automatically.
+                        </p>
+                        <div class="mb-3">
+                            <label for="id_hostel_name" class="form-label small text-secondary">Hostel Name</label>
+                            <input type="text" name="name" id="id_hostel_name" class="form-control" placeholder="E.g., ABC Boys Hostel, Ramanujan Block" required>
+                        </div>
+                    </div>
+                    <div class="modal-footer border-top border-secondary border-opacity-25">
+                        <button type="button" class="btn btn-outline-custom rounded-pill" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-teal-gradient rounded-pill px-4">Create Hostel & Key</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- Analytics Charts (Collapsible for premium compact dashboard experience) -->
+    <div class="collapse show mb-4" id="analyticsCollapse">
+        <div class="row g-4">
+            <!-- Stats overview cards -->
+            <div class="col-lg-4 d-flex flex-column gap-3">
+                <div class="glass-card kpi-card warning py-3 flex-fill">
+                    <div class="d-flex align-items-center justify-content-between px-3">
+                        <div>
+                            <h6 class="text-secondary mb-1">Awaiting Warden Review</h6>
+                            <h3 class="text-white fw-bold mb-0">{{ pending_count }}</h3>
+                        </div>
+                        <i class="fa-solid fa-hourglass-start fs-1 text-warning opacity-75"></i>
+                    </div>
+                </div>
+                <div class="glass-card kpi-card indigo py-3 flex-fill">
+                    <div class="d-flex align-items-center justify-content-between px-3">
+                        <div>
+                            <h6 class="text-secondary mb-1">Under Maintenance</h6>
+                            <h3 class="text-white fw-bold mb-0">{{ in_progress_count }}</h3>
+                        </div>
+                        <i class="fa-solid fa-toolbox fs-1 text-indigo opacity-75"></i>
+                    </div>
+                </div>
+                <div class="glass-card kpi-card py-3 flex-fill">
+                    <div class="d-flex align-items-center justify-content-between px-3">
+                        <div>
+                            <h6 class="text-secondary mb-1">Resolved Cases</h6>
+                            <h3 class="text-white fw-bold mb-0">{{ resolved_count|add:closed_count }}</h3>
+                        </div>
+                        <i class="fa-solid fa-check-double fs-1 text-teal opacity-75"></i>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Chart 1: Categories distribution -->
+            <div class="col-lg-4">
+                <div class="glass-card p-3 h-100 d-flex flex-column align-items-center justify-content-center">
+                    <h6 class="text-white mb-3 text-start w-100 px-2">Complaints by Category</h6>
+                    <div style="width: 100%; max-height: 200px; position: relative;">
+                        <canvas id="categoryChart"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Chart 2: Status distribution -->
+            <div class="col-lg-4">
+                <div class="glass-card p-3 h-100 d-flex flex-column align-items-center justify-content-center">
+                    <h6 class="text-white mb-3 text-start w-100 px-2">Cases by Status</h6>
+                    <div style="width: 100%; max-height: 200px; position: relative;">
+                        <canvas id="statusChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filters Row -->
+    <div class="glass-card p-3 mb-4">
+        <form method="GET" class="row g-2 align-items-center">
+            <div class="col-md-3">
+                <div class="input-group">
+                    <span class="input-group-text bg-transparent border-secondary border-opacity-25 text-secondary">
+                        <i class="fa-solid fa-magnifying-glass"></i>
+                    </span>
+                    <input type="text" name="search" class="form-control" placeholder="Search student name, title, room..." value="{{ search_query }}">
+                </div>
+            </div>
+            <div class="col-md-2 col-6">
+                <select name="status" class="form-select">
+                    <option value="">All Statuses</option>
+                    <option value="pending" {% if status_filter == 'pending' %}selected{% endif %}>Pending</option>
+                    <option value="in_progress" {% if status_filter == 'in_progress' %}selected{% endif %}>In Progress</option>
+                    <option value="resolved" {% if status_filter == 'resolved' %}selected{% endif %}>Resolved</option>
+                    <option value="closed" {% if status_filter == 'closed' %}selected{% endif %}>Closed</option>
+                </select>
+            </div>
+            <div class="col-md-2 col-6">
+                <select name="category" class="form-select">
+                    <option value="">All Categories</option>
+                    <option value="electrical" {% if category_filter == 'electrical' %}selected{% endif %}>Electrical</option>
+                    <option value="plumbing" {% if category_filter == 'plumbing' %}selected{% endif %}>Plumbing</option>
+                    <option value="housekeeping" {% if category_filter == 'housekeeping' %}selected{% endif %}>Housekeeping</option>
+                    <option value="wifi" {% if category_filter == 'wifi' %}selected{% endif %}>Wi-Fi / Internet</option>
+                    <option value="mess" {% if category_filter == 'mess' %}selected{% endif %}>Mess & Food</option>
+                    <option value="carpentry" {% if category_filter == 'carpentry' %}selected{% endif %}>Carpentry</option>
+                    <option value="others" {% if category_filter == 'others' %}selected{% endif %}>Others</option>
+                </select>
+            </div>
+            <div class="col-md-2 col-6">
+                <select name="priority" class="form-select">
+                    <option value="">All Priorities</option>
+                    <option value="low" {% if priority_filter == 'low' %}selected{% endif %}>Low</option>
+                    <option value="medium" {% if priority_filter == 'medium' %}selected{% endif %}>Medium</option>
+                    <option value="high" {% if priority_filter == 'high' %}selected{% endif %}>High</option>
+                </select>
+            </div>
+            <div class="col-md-2 col-6">
+                <select name="block" class="form-select">
+                    <option value="">All Blocks</option>
+                    {% for block in blocks %}
+                        {% if block %}
+                            <option value="{{ block }}" {% if block_filter == block %}selected{% endif %}>{{ block }}</option>
+                        {% endif %}
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-1 d-flex gap-1 justify-content-end">
+                <button type="submit" class="btn btn-indigo-gradient w-100 rounded-pill p-2"><i class="fa-solid fa-filter"></i></button>
+                <a href="{% url 'dashboard' %}" class="btn btn-outline-custom rounded-circle p-2 px-3"><i class="fa-solid fa-arrows-rotate"></i></a>
+            </div>
+        </form>
+    </div>
+
+    <!-- Master Complaints list -->
+    <div class="glass-card p-3 overflow-hidden">
+        <h5 class="text-white mb-3 px-2">Master Complaints Registry</h5>
+        {% if complaints %}
+            <div class="table-responsive">
+                <table class="custom-table">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Student / Hostel Location</th>
+                            <th>Complaint Details</th>
+                            <th>Category</th>
+                            <th>Priority</th>
+                            <th>Staff Assigned</th>
+                            <th>Status</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for complaint in complaints %}
+                        <tr>
+                            <td class="text-white font-monospace">#{{ complaint.id }}</td>
+                            <td>
+                                <div class="fw-semibold text-white">{{ complaint.student.username }}</div>
+                                <div class="text-secondary small">{{ complaint.hostel_block }}, Room {{ complaint.room_no }}</div>
+                            </td>
+                            <td>
+                                <div class="fw-semibold text-white">{{ complaint.title }}</div>
+                                <div class="text-secondary small text-truncate" style="max-width: 200px;">{{ complaint.description }}</div>
+                            </td>
+                            <td>
+                                <span class="text-secondary small d-flex align-items-center">
+                                    {% if complaint.category == 'electrical' %}
+                                        <i class="fa-solid fa-bolt text-warning me-2"></i>
+                                    {% elif complaint.category == 'plumbing' %}
+                                        <i class="fa-solid fa-faucet text-info me-2"></i>
+                                    {% elif complaint.category == 'housekeeping' %}
+                                        <i class="fa-solid fa-broom text-teal me-2"></i>
+                                    {% elif complaint.category == 'wifi' %}
+                                        <i class="fa-solid fa-wifi text-primary me-2"></i>
+                                    {% elif complaint.category == 'mess' %}
+                                        <i class="fa-solid fa-utensils text-danger me-2"></i>
+                                    {% elif complaint.category == 'carpentry' %}
+                                        <i class="fa-solid fa-hammer text-orange me-2"></i>
+                                    {% else %}
+                                        <i class="fa-solid fa-circle-question text-secondary me-2"></i>
+                                    {% endif %}
+                                    {{ complaint.get_category_display }}
+                                </span>
+                            </td>
+                            <td>
+                                <span class="badge-priority {{ complaint.priority }}">
+                                    {{ complaint.get_priority_display }}
+                                </span>
+                            </td>
+                            <td>
+                                {% if complaint.assigned_staff %}
+                                    <span class="text-white small fw-medium">
+                                        <i class="fa-solid fa-user-gear me-1 text-teal"></i>{{ complaint.assigned_staff }}
+                                    </span>
+                                {% else %}
+                                    <span class="text-muted small italic">Unassigned</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <span class="badge-status {{ complaint.status }}">
+                                    {{ complaint.get_status_display }}
+                                </span>
+                            </td>
+                            <td>
+                                <a href="{% url 'complaint_detail' complaint.pk %}" class="btn btn-outline-custom btn-sm rounded-pill px-3">
+                                    Manage
+                                </a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% else %}
+            <div class="text-center py-5">
+                <i class="fa-solid fa-box-open fs-1 text-secondary opacity-25 mb-3"></i>
+                <h5 class="text-white">No complaints found</h5>
+                <p class="text-secondary small">No system-wide complaints match your selected filters.</p>
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<!-- ChartJS CDN -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        // Load data from views JSON serializers
+        const categoryLabels = JSON.parse('{{ chart_categories_json|safe }}');
+        const categoryCounts = JSON.parse('{{ chart_category_counts_json|safe }}');
+        const statusLabels = JSON.parse('{{ chart_statuses_json|safe }}');
+        const statusCounts = JSON.parse('{{ chart_status_counts_json|safe }}');
+
+        // Render Category Doughnut Chart
+        if (categoryLabels.length > 0) {
+            const ctxCategory = document.getElementById('categoryChart').getContext('2d');
+            new Chart(ctxCategory, {
+                type: 'doughnut',
+                data: {
+                    labels: categoryLabels,
+                    datasets: [{
+                        data: categoryCounts,
+                        backgroundColor: [
+                            '#6366f1', '#14b8a6', '#f59e0b', '#ef4444', '#10b981', '#3b82f6', '#94a3b8'
+                        ],
+                        borderWidth: 1,
+                        borderColor: '#1e293b'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'right',
+                            labels: { color: '#94a3b8', font: { size: 10 } }
+                        }
+                    }
+                }
+            });
+        } else {
+            // Draw placeholder text if no data exists
+            const canvas = document.getElementById('categoryChart');
+            const ctx = canvas.getContext('2d');
+            ctx.fillStyle = '#94a3b8';
+            ctx.font = '14px Outfit';
+            ctx.textAlign = 'center';
+            ctx.fillText('No data available', canvas.width/2, canvas.height/2);
+        }
+
+        // Render Status Bar Chart
+        if (statusLabels.length > 0) {
+            const ctxStatus = document.getElementById('statusChart').getContext('2d');
+            new Chart(ctxStatus, {
+                type: 'bar',
+                data: {
+                    labels: statusLabels,
+                    datasets: [{
+                        label: 'Complaints',
+                        data: statusCounts,
+                        backgroundColor: '#14b8a6',
+                        borderRadius: 6,
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        x: { grid: { display: false }, ticks: { color: '#94a3b8' } },
+                        y: { grid: { color: 'rgba(255, 255, 255, 0.05)' }, ticks: { color: '#94a3b8', stepSize: 1 } }
+                    },
+                    plugins: {
+                        legend: { display: false }
+                    }
+                }
+            });
+        } else {
+            const canvas = document.getElementById('statusChart');
+            const ctx = canvas.getContext('2d');
+            ctx.fillStyle = '#94a3b8';
+            ctx.font = '14px Outfit';
+            ctx.textAlign = 'center';
+            ctx.fillText('No data available', canvas.width/2, canvas.height/2);
+        }
+    });
+</script>
+{% endblock %}

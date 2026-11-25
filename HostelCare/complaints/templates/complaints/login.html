@@ -1,0 +1,51 @@
+{% extends 'complaints/base.html' %}
+
+{% block title %}Sign In - HostelCare{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-md-5">
+            <div class="glass-card p-4 p-md-5">
+                <div class="text-center mb-4">
+                    <i class="fa-solid fa-lock-open fs-1 text-teal mb-3"></i>
+                    <h2 class="text-white">Account Login</h2>
+                    <p class="text-secondary small">Access the Hostel Complaint Management Portal</p>
+                </div>
+                
+                <form method="POST">
+                    {% csrf_token %}
+                    
+                    {% for field in form %}
+                    <div class="mb-3">
+                        <label for="{{ field.id_for_label }}" class="form-label text-secondary small fw-medium">
+                            {{ field.label }}
+                        </label>
+                        <input type="{{ field.field.widget.input_type|default:'text' }}" 
+                               name="{{ field.html_name }}" 
+                               id="{{ field.id_for_label }}" 
+                               class="form-control" 
+                               placeholder="Enter {{ field.label|lower }}"
+                               required>
+                        {% if field.errors %}
+                        <div class="text-danger small mt-1">
+                            {{ field.errors|first }}
+                        </div>
+                        {% endif %}
+                    </div>
+                    {% endfor %}
+
+                    <button type="submit" class="btn btn-teal-gradient w-100 py-2 mt-3 rounded-pill">
+                        Sign In
+                    </button>
+                </form>
+
+                <div class="text-center mt-4">
+                    <span class="text-secondary small">New here? </span>
+                    <a href="{% url 'register' %}" class="text-teal small text-decoration-none">Create a student account</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

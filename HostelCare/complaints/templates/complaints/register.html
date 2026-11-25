@@ -1,0 +1,94 @@
+{% extends 'complaints/base.html' %}
+
+{% block title %}Student & Staff Registration - HostelCare{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-md-7">
+            <div class="glass-card p-4 p-md-5">
+                <div class="text-center mb-4">
+                    <i class="fa-solid fa-user-plus fs-1 text-indigo mb-3"></i>
+                    <h2 class="text-white">Create Account</h2>
+                    <p class="text-secondary small">Register as a Student or Hostel Warden</p>
+                </div>
+                
+                <form method="POST" enctype="multipart/form-data" class="needs-validation" novalidate>
+                    {% csrf_token %}
+                    
+                    {% if form.non_field_errors %}
+                    <div class="alert alert-danger border-0 small">
+                        {% for error in form.non_field_errors %}
+                            {{ error }}
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+
+                    <div class="row">
+                        <!-- Left column for credentials -->
+                        <div class="col-md-6">
+                            <h5 class="text-white mb-3 border-bottom border-secondary border-opacity-25 pb-2">Credentials</h5>
+                            
+                            {% for field in form %}
+                                {% if field.name == 'username' or field.name == 'email' or field.name == 'password1' or field.name == 'password2' %}
+                                <div class="mb-3">
+                                    <label for="{{ field.id_for_label }}" class="form-label text-secondary small fw-medium">
+                                        {{ field.label }}
+                                    </label>
+                                    {{ field }}
+                                    {% if field.help_text %}
+                                    <div class="form-text text-muted-small" style="font-size: 11px;">
+                                        {{ field.help_text|safe }}
+                                    </div>
+                                    {% endif %}
+                                    {% if field.errors %}
+                                    <div class="text-danger small mt-1">
+                                        {{ field.errors|first }}
+                                    </div>
+                                    {% endif %}
+                                </div>
+                                {% endif %}
+                            {% endfor %}
+                        </div>
+
+                        <!-- Right column for profile parameters -->
+                        <div class="col-md-6">
+                            <h5 class="text-white mb-3 border-bottom border-secondary border-opacity-25 pb-2">Profile Info</h5>
+                            
+                            {% for field in form %}
+                                {% if field.name != 'username' and field.name != 'email' and field.name != 'password1' and field.name != 'password2' %}
+                                <div class="mb-3" id="div_{{ field.name }}">
+                                    <label for="{{ field.id_for_label }}" class="form-label text-secondary small fw-medium">
+                                        {{ field.label }}
+                                    </label>
+                                    {{ field }}
+                                    {% if field.help_text %}
+                                    <div class="form-text text-muted-small" style="font-size: 11px;">
+                                        {{ field.help_text|safe }}
+                                    </div>
+                                    {% endif %}
+                                    {% if field.errors %}
+                                    <div class="text-danger small mt-1">
+                                        {{ field.errors|first }}
+                                    </div>
+                                    {% endif %}
+                                </div>
+                                {% endif %}
+                            {% endfor %}
+                        </div>
+                    </div>
+
+                    <button type="submit" class="btn btn-indigo-gradient w-100 py-2 mt-4 rounded-pill">
+                        Register Account
+                    </button>
+                </form>
+
+                <div class="text-center mt-4">
+                    <span class="text-secondary small">Already registered? </span>
+                    <a href="{% url 'login' %}" class="text-indigo small text-decoration-none">Sign in here</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

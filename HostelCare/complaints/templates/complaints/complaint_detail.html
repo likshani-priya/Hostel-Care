@@ -1,0 +1,300 @@
+{% extends 'complaints/base.html' %}
+{% load static %}
+
+{% block title %}Complaint Details #{{ complaint.id }} - HostelCare{% endblock %}
+
+{% block content %}
+<div class="container">
+    <!-- Breadcrumb back navigation -->
+    <div class="mb-3">
+        <a href="{% url 'dashboard' %}" class="text-secondary text-decoration-none small">
+            <i class="fa-solid fa-arrow-left me-2"></i>Back to Dashboard
+        </a>
+    </div>
+
+    <!-- Main Detail Grid -->
+    <div class="row g-4">
+        <!-- Left Column: Case Details & Timeline -->
+        <div class="col-lg-7">
+            <!-- Complaint Details Card -->
+            <div class="glass-card p-4 mb-4">
+                <div class="d-flex justify-content-between align-items-start gap-2 mb-3">
+                    <div>
+                        <span class="badge-priority {{ complaint.priority }} mb-2 d-inline-block">
+                            {{ complaint.get_priority_display }} Priority
+                        </span>
+                        <h3 class="text-white mb-1">{{ complaint.title }}</h3>
+                        <p class="text-secondary small mb-0">
+                            Filed on {{ complaint.created_at|date:"d M Y, h:i A" }} &nbsp;|&nbsp; Category: <strong>{{ complaint.get_category_display }}</strong>
+                        </p>
+                    </div>
+                    <span class="badge-status {{ complaint.status }} fs-6">
+                        {{ complaint.get_status_display }}
+                    </span>
+                </div>
+
+                <hr class="border-secondary opacity-25">
+
+                <div class="mb-4">
+                    <h6 class="text-secondary small uppercase fw-semibold mb-2">Issue Description</h6>
+                    <p class="text-white text-pre-wrap">{{ complaint.description }}</p>
+                </div>
+
+                <!-- Location Info -->
+                <div class="row g-3 mb-4">
+                    <div class="col-sm-6">
+                        <div class="p-3 bg-dark bg-opacity-50 border border-secondary border-opacity-25 rounded-3">
+                            <span class="text-secondary small block">Hostel Block</span>
+                            <span class="text-white fw-medium">{{ complaint.hostel_block }}</span>
+                        </div>
+                    </div>
+                    <div class="col-sm-6">
+                        <div class="p-3 bg-dark bg-opacity-50 border border-secondary border-opacity-25 rounded-3">
+                            <span class="text-secondary small block">Room Number</span>
+                            <span class="text-white fw-medium">{{ complaint.room_no }}</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Student Profile details (Warden View Only) -->
+                {% if is_warden %}
+                <div class="mb-4 p-3 bg-dark bg-opacity-30 border border-secondary border-opacity-25 rounded-3">
+                    <h6 class="text-indigo small fw-semibold mb-2">Student Contact Info</h6>
+                    <div class="row g-2">
+                        <div class="col-sm-6 text-secondary small">
+                            Name: <strong class="text-white">{{ complaint.student.username }}</strong>
+                        </div>
+                        <div class="col-sm-6 text-secondary small">
+                            Email: <strong class="text-white">{{ complaint.student.email }}</strong>
+                        </div>
+                        <div class="col-sm-6 text-secondary small">
+                            Roll No: <strong class="text-white">{{ complaint.student.profile.roll_no }}</strong>
+                        </div>
+                        <div class="col-sm-6 text-secondary small">
+                            Phone: <strong class="text-white">{{ complaint.student.profile.phone|default:"N/A" }}</strong>
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+
+                <!-- Photo Proof Attachment -->
+                {% if complaint.attachment %}
+                <div class="mb-3">
+                    <h6 class="text-secondary small fw-semibold mb-2">Photo Evidence</h6>
+                    <a href="{{ complaint.attachment.url }}" target="_blank">
+                        <img src="{{ complaint.attachment.url }}" alt="Complaint Photo" class="img-fluid rounded-3 border border-secondary border-opacity-50 max-h-300">
+                    </a>
+                </div>
+                {% endif %}
+
+                <!-- Assigned technician info -->
+                {% if complaint.assigned_staff %}
+                <div class="p-3 bg-teal bg-opacity-10 border border-teal border-opacity-25 rounded-3 mt-4">
+                    <span class="text-teal small d-block">Assigned Maintenance Staff</span>
+                    <strong class="text-white"><i class="fa-solid fa-user-gear me-2 text-teal"></i>{{ complaint.assigned_staff }}</strong>
+                </div>
+                {% endif %}
+            </div>
+
+            <!-- Warden Control Panel / Student Feedback Actions -->
+            {% if is_warden %}
+                <!-- Warden management panel -->
+                <div class="glass-card p-4 mb-4 border-indigo border-opacity-50">
+                    <h4 class="text-white mb-3"><i class="fa-solid fa-sliders me-2 text-indigo"></i>Management Panel</h4>
+                    <form method="POST">
+                        {% csrf_token %}
+                        <input type="hidden" name="action_type" value="update_complaint">
+                        
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label for="id_status" class="form-label text-secondary small">Update Status</label>
+                                {{ action_form.status }}
+                            </div>
+                            <div class="col-md-6">
+                                <label for="id_priority" class="form-label text-secondary small">Change Priority</label>
+                                {{ action_form.priority }}
+                            </div>
+                            <div class="col-12">
+                                <label for="id_assigned_staff" class="form-label text-secondary small">Assign Maintenance Technician</label>
+                                {{ action_form.assigned_staff }}
+                            </div>
+                        </div>
+
+                        <button type="submit" class="btn btn-indigo-gradient w-100 mt-4 rounded-pill">
+                            Save Changes & Dispatches
+                        </button>
+                    </form>
+                </div>
+            {% else %}
+                <!-- Student Action Panel: Rate & Close, or Reopen -->
+                {% if complaint.status == 'resolved' %}
+                    <div class="glass-card p-4 mb-4 border-teal border-opacity-50">
+                        <h4 class="text-white mb-2"><i class="fa-solid fa-gift me-2 text-teal"></i>Resolution Feedback Required</h4>
+                        <p class="text-secondary small mb-4">
+                            The Warden has marked this issue as <strong>Resolved</strong>. Please review their work. If you are satisfied, rate the service to permanently close the case.
+                        </p>
+                        
+                        <form method="POST">
+                            {% csrf_token %}
+                            <input type="hidden" name="action_type" value="submit_feedback">
+                            
+                            <div class="mb-3">
+                                <label class="form-label text-secondary small">Service Rating</label>
+                                <div class="star-rating">
+                                    <input type="radio" id="star5" name="rating" value="5" /><label for="star5" title="5 stars"><i class="fa-solid fa-star"></i></label>
+                                    <input type="radio" id="star4" name="rating" value="4" /><label for="star4" title="4 stars"><i class="fa-solid fa-star"></i></label>
+                                    <input type="radio" id="star3" name="rating" value="3" /><label for="star3" title="3 stars"><i class="fa-solid fa-star"></i></label>
+                                    <input type="radio" id="star2" name="rating" value="2" /><label for="star2" title="2 stars"><i class="fa-solid fa-star"></i></label>
+                                    <input type="radio" id="star1" name="rating" value="1" /><label for="star1" title="1 star"><i class="fa-solid fa-star"></i></label>
+                                </div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="id_feedback" class="form-label text-secondary small">Resolution Remarks</label>
+                                <textarea name="feedback" id="id_feedback" rows="3" class="form-control" placeholder="Add resolution feedback or remarks..."></textarea>
+                            </div>
+
+                            <div class="d-flex gap-3">
+                                <a href="{% url 'reopen_complaint' complaint.pk %}" class="btn btn-outline-danger rounded-pill px-4">
+                                    Unresolved: Reopen Case
+                                </a>
+                                <button type="submit" class="btn btn-teal-gradient rounded-pill px-5 flex-fill">
+                                    Accept & Close Complaint
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                {% elif complaint.status == 'closed' %}
+                    <div class="glass-card p-4 mb-4 bg-dark bg-opacity-40">
+                        <h5 class="text-white mb-2"><i class="fa-solid fa-circle-check text-success me-2"></i>Case Closed</h5>
+                        <p class="text-secondary small mb-3">This issue is resolved and finalized.</p>
+                        
+                        <div class="p-3 bg-dark bg-opacity-50 border border-secondary border-opacity-25 rounded-3 mb-3">
+                            <span class="text-secondary small d-block">Your Rating</span>
+                            <div class="text-warning mb-2">
+                                {% for i in "12345" %}
+                                    {% if forloop.counter <= complaint.rating %}
+                                        <i class="fa-solid fa-star"></i>
+                                    {% else %}
+                                        <i class="fa-regular fa-star opacity-50"></i>
+                                    {% endif %}
+                                {% endfor %}
+                            </div>
+                            {% if complaint.feedback %}
+                                <span class="text-secondary small d-block">Your Comments</span>
+                                <p class="text-white small mb-0 italic">"{{ complaint.feedback }}"</p>
+                            {% endif %}
+                        </div>
+
+                        <a href="{% url 'reopen_complaint' complaint.pk %}" class="btn btn-outline-custom rounded-pill btn-sm w-100">
+                            Reopen Complaint
+                        </a>
+                    </div>
+                {% endif %}
+            {% endif %}
+        </div>
+
+        <!-- Right Column: Case Progress timeline & Chat -->
+        <div class="col-lg-5">
+            <!-- Progress Timeline -->
+            <div class="glass-card p-4 mb-4">
+                <h5 class="text-white mb-4"><i class="fa-solid fa-clock-rotate-left text-teal me-2"></i>Case Status Timeline</h5>
+                
+                <div class="timeline-track">
+                    <div class="timeline-item completed {% if complaint.status == 'pending' %}active{% endif %}">
+                        <div class="timeline-title text-white">Pending Review</div>
+                        <div class="timeline-time">Warden review and priority selection</div>
+                    </div>
+                    
+                    <div class="timeline-item {% if complaint.status == 'in_progress' or complaint.status == 'resolved' or complaint.status == 'closed' %}completed{% endif %} {% if complaint.status == 'in_progress' %}active{% endif %}">
+                        <div class="timeline-title text-white">In Progress</div>
+                        <div class="timeline-time">Assigned to maintenance team for repair</div>
+                    </div>
+                    
+                    <div class="timeline-item {% if complaint.status == 'resolved' or complaint.status == 'closed' %}completed{% endif %} {% if complaint.status == 'resolved' %}active{% endif %}">
+                        <div class="timeline-title text-white">Resolved</div>
+                        <div class="timeline-time">Work completed, awaiting student signoff</div>
+                    </div>
+                    
+                    <div class="timeline-item {% if complaint.status == 'closed' %}completed active{% endif %}">
+                        <div class="timeline-title text-white">Closed</div>
+                        <div class="timeline-time">Case finalized with feedback survey</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Direct Messaging Chat box -->
+            <div class="glass-card p-4">
+                <h5 class="text-white mb-3"><i class="fa-solid fa-comments text-indigo me-2"></i>Messaging Board</h5>
+                
+                <!-- Chat Bubbles Thread -->
+                <div class="chat-container mb-3">
+                    {% if comments %}
+                        {% for comment in comments %}
+                            {% if comment.is_internal %}
+                                <!-- Internal notes bubble -->
+                                <div class="chat-bubble internal">
+                                    <div class="chat-meta">
+                                        <span><i class="fa-solid fa-shield-halved me-1 text-warning"></i>{{ comment.author.username }} (Internal Note)</span>
+                                        <span>{{ comment.created_at|date:"d M, h:i A" }}</span>
+                                    </div>
+                                    <div class="chat-content text-warning">{{ comment.message }}</div>
+                                </div>
+                            {% else %}
+                                <!-- Standard message bubbles -->
+                                <div class="chat-bubble {% if comment.author == user %}sent{% else %}received{% endif %}">
+                                    <div class="chat-meta">
+                                        <span>
+                                            {% if comment.author.profile.role == 'warden' %}
+                                                <i class="fa-solid fa-user-shield me-1 text-indigo"></i>Warden
+                                            {% else %}
+                                                <i class="fa-solid fa-user me-1 text-teal"></i>{{ comment.author.username }}
+                                            {% endif %}
+                                        </span>
+                                        <span>{{ comment.created_at|date:"d M, h:i A" }}</span>
+                                    </div>
+                                    <div class="chat-content text-white">{{ comment.message }}</div>
+                                </div>
+                            {% endif %}
+                        {% endfor %}
+                    {% else %}
+                        <div class="text-center py-4 text-secondary small">
+                            <i class="fa-solid fa-message opacity-25 mb-2 fs-3"></i>
+                            <p class="mb-0">No messages yet. Send a note to the {% if is_warden %}student{% else %}warden{% endif %}.</p>
+                        </div>
+                    {% endif %}
+                </div>
+
+                <!-- Message input form -->
+                {% if complaint.status != 'closed' or is_warden %}
+                <form method="POST">
+                    {% csrf_token %}
+                    <input type="hidden" name="action_type" value="add_comment">
+                    
+                    <div class="mb-2">
+                        {{ comment_form.message }}
+                    </div>
+
+                    {% if is_warden %}
+                    <div class="form-check mb-3">
+                        {{ comment_form.is_internal }}
+                        <label class="form-check-label text-secondary small" for="id_is_internal">
+                            Mark as Internal Note <span class="text-muted">(only visible to other wardens)</span>
+                        </label>
+                    </div>
+                    {% endif %}
+
+                    <button type="submit" class="btn btn-indigo-gradient btn-sm w-100 rounded-pill py-2">
+                        <i class="fa-regular fa-paper-plane me-2"></i>Send Message
+                    </button>
+                </form>
+                {% else %}
+                <div class="text-center p-2 border border-secondary border-opacity-10 rounded text-muted-small" style="font-size: 12px;">
+                    This complaint is closed. Messaging is locked.
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

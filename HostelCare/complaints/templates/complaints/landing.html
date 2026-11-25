@@ -1,0 +1,121 @@
+{% extends 'complaints/base.html' %}
+{% load static %}
+
+{% block title %}Welcome to HostelCare - Hostel Complaint Portal{% endblock %}
+
+{% block content %}
+<div class="container">
+    <!-- Hero Section -->
+    <div class="row align-items-center py-5">
+        <div class="col-lg-6 mb-4 mb-lg-0">
+            <h1 class="display-4 fw-bold text-white mb-3 leading-sm">
+                Fast & Transparent <br>
+                <span class="text-gradient">Hostel Complaints</span> <br>
+                Resolution System
+            </h1>
+            <p class="fs-5 text-secondary mb-4">
+                File queries, track status timelines, and communicate directly with your hostel wardens. No more queues or lost files.
+            </p>
+            <div class="d-flex gap-3">
+                <a href="{% url 'register' %}" class="btn btn-teal-gradient btn-lg rounded-pill px-4">
+                    Register as Student
+                </a>
+                <a href="{% url 'login' %}" class="btn btn-outline-custom btn-lg rounded-pill px-4">
+                    Sign In
+                </a>
+            </div>
+        </div>
+        <div class="col-lg-6">
+            <div class="glass-card p-4 text-center">
+                <i class="fa-solid fa-headset fs-1 text-teal mb-3"></i>
+                <h3 class="h4 text-white mb-3">Need Immediate Repair?</h3>
+                <p class="text-secondary small mb-4">
+                    Register and file issues from anywhere on campus. Wardens assign technical staff to resolve them within 24 hours.
+                </p>
+                <div class="row g-3">
+                    <div class="col-6">
+                        <div class="p-3 bg-dark bg-opacity-50 border border-secondary border-opacity-25 rounded-3">
+                            <h4 class="text-gradient mb-1">{{ total_complaints }}</h4>
+                            <span class="text-secondary small">Total Cases</span>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <div class="p-3 bg-dark bg-opacity-50 border border-secondary border-opacity-25 rounded-3">
+                            <h4 class="text-success mb-1">{{ resolved_complaints }}</h4>
+                            <span class="text-secondary small">Resolved</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Stats Section -->
+    <div class="row my-5 g-4">
+        <div class="col-md-4">
+            <div class="glass-card kpi-card warning h-100">
+                <div class="kpi-icon text-warning">
+                    <i class="fa-solid fa-clock-rotate-left"></i>
+                </div>
+                <h5 class="text-secondary">Pending Reviews</h5>
+                <h2 class="text-white fw-bold mt-2">{{ pending_complaints }}</h2>
+                <p class="text-secondary small mb-0 mt-3">Awaiting assignment by wardens.</p>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="glass-card kpi-card indigo h-100">
+                <div class="kpi-icon text-indigo">
+                    <i class="fa-solid fa-screwdriver-wrench"></i>
+                </div>
+                <h5 class="text-secondary">In Progress</h5>
+                <h2 class="text-white fw-bold mt-2">{{ in_progress_complaints }}</h2>
+                <p class="text-secondary small mb-0 mt-3">Currently assigned to maintenance staff.</p>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="glass-card kpi-card h-100">
+                <div class="kpi-icon text-teal">
+                    <i class="fa-solid fa-square-check"></i>
+                </div>
+                <h5 class="text-secondary">Successfully Closed</h5>
+                <h2 class="text-white fw-bold mt-2">{{ resolved_complaints }}</h2>
+                <p class="text-secondary small mb-0 mt-3">Verified and rated by students.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Workflow Section -->
+    <div class="py-5 text-center">
+        <h2 class="text-white mb-5">How It Works</h2>
+        <div class="row g-4">
+            <div class="col-md-4">
+                <div class="p-4">
+                    <div class="avatar-md-placeholder bg-dark border border-secondary border-opacity-25 mx-auto mb-4">
+                        <i class="fa-solid fa-pen-to-square text-teal"></i>
+                    </div>
+                    <h5 class="text-white mb-2">1. File Complaint</h5>
+                    <p class="text-secondary small">Describe the issue, specify your room/block, and upload photo proof.</p>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="p-4">
+                    <div class="avatar-md-placeholder bg-dark border border-secondary border-opacity-25 mx-auto mb-4">
+                        <i class="fa-solid fa-users-gear text-indigo"></i>
+                    </div>
+                    <h5 class="text-white mb-2">2. Warden Assigns</h5>
+                    <p class="text-secondary small">Warden reviews the issue, updates priority, and dispatches a technician.</p>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="p-4">
+                    <div class="avatar-md-placeholder bg-dark border border-secondary border-opacity-25 mx-auto mb-4">
+                        <i class="fa-solid fa-star text-warning"></i>
+                    </div>
+                    <h5 class="text-white mb-2">3. Resolve & Rate</h5>
+                    <p class="text-secondary small">Once the work is done, rate the resolution and close the case.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
